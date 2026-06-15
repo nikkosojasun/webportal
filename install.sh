@@ -136,12 +136,43 @@ setup_repository() {
 setup_venv() {
     print_header "Setting Up Python Virtual Environment"
     
-    if [ ! -d "venv" ]; then
+    # Check if venv directory exists
+    if [ -d "venv" ]; then
+        # Check if the virtual environment is valid
+        if [ ! -f "venv/bin/activate" ] || [ ! -f "venv/bin/python" ]; then
+            print_warning "Virtual environment exists but appears to be corrupted"
+            read -p "Do you want to remove and recreate it? (y/n) " -n 1 -r
+            echo
+            if [[ $REPLY =~ ^[Yy]$ ]]; then
+                print_info "Removing corrupted virtual environment..."
+                rm -rf venv
+                print_success "Removed venv directory"
+                print_info "Creating new virtual environment..."
+                python3 -m venv venv
+                print_success "Virtual environment created"
+            else
+                print_error "Cannot proceed with corrupted virtual environment"
+                exit 1
+            fi
+        else
+            print_info "Virtual environment already exists and appears valid"
+        fi
+    else
         print_info "Creating virtual environment..."
         python3 -m venv venv
         print_success "Virtual environment created"
-    else
-        print_warning "Virtual environment already exists"
+    fi
+    
+    # Verify the virtual environment can be activated
+    if [ ! -f "venv/bin/activate" ]; then
+        print_error "Failed to create virtual environment properly"
+        print_info "Attempting to recreate..."
+        rm -rf venv
+        python3 -m venv venv
+        if [ ! -f "venv/bin/activate" ]; then
+            print_error "Failed to create virtual environment. Check your Python installation"
+            exit 1
+        fi
     fi
     
     print_info "Activating virtual environment..."
@@ -152,6 +183,12 @@ setup_venv() {
 # Install Python dependencies
 install_dependencies() {
     print_header "Installing Python Dependencies"
+    
+    # Ensure we're in the virtual environment
+    if [ -z "$VIRTUAL_ENV" ]; then
+        print_warning "Virtual environment not active, activating now..."
+        source venv/bin/activate
+    fi
     
     print_info "Upgrading pip, setuptools, and wheel..."
     pip install --upgrade pip setuptools wheel
@@ -166,12 +203,18 @@ install_dependencies() {
 test_installation() {
     print_header "Testing Installation"
     
-    print_info "Verifying Python packages..."
-    python3 -c "import flask; print(f'Flask version: {flask.__version__}')"
-    python3 -c "import yaml; print(f'PyYAML version: {yaml.__version__}')"
-    python3 -c "from werkzeug import __version__; print(f'Werkzeug version: {__version__}')"
+    # Ensure we're in the virtual environment
+    if [ -z "$VIRTUAL_ENV" ]; then
+        print_warning "Virtual environment not active, activating now..."
+        source venv/bin/activate
+    fi
     
-    print_success "All packages verified"
+    print_info "Verifying Python packages..."
+    python -c "import flask; print(f'Flask version: {flask.__version__}')" || print_warning "Flask not found yet"
+    python -c "import yaml; print(f'PyYAML version: {yaml.__version__}')" || print_warning "PyYAML not found yet"
+    python -c "from werkzeug import __version__; print(f'Werkzeug version: {__version__}')" || print_warning "Werkzeug not found yet"
+    
+    print_success "Package verification complete"
 }
 
 # Create configuration directory
@@ -203,19 +246,22 @@ EOF
     
     echo ""
     print_header "Quick Start"
-    echo "1. Activate virtual environment:"
+    echo "1. Navigate to the webportal directory:"
+    echo "   ${BLUE}cd webportal${NC}"
+    echo ""
+    echo "2. Activate virtual environment:"
     echo "   ${BLUE}source venv/bin/activate${NC}"
     echo ""
-    echo "2. Run the application:"
+    echo "3. Run the application:"
     echo "   ${BLUE}python3 app.py${NC}"
     echo ""
-    echo "3. Open your browser and navigate to:"
+    echo "4. Open your browser and navigate to:"
     echo "   ${BLUE}http://localhost:5000${NC}"
     echo ""
     
     echo -e "${YELLOW}Optional: Run as a systemd service${NC}"
-    echo "For persistent background operation, see the README.md file"
-    echo "or run: bash install-service.sh"
+    echo "For persistent background operation:"
+    echo "   ${BLUE}sudo bash install-service.sh${NC}"
     echo ""
     
     print_success "Installation is complete. Happy labbing!"
