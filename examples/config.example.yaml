@@ -1,0 +1,74 @@
+# WebPortal Configuration Example
+# This file demonstrates the YAML format for webportal configuration
+# You can import this into your webportal to get started with example links
+
+links:
+  - title: "Plex Media Server"
+    url: "http://192.168.1.100:32400"
+    description: "Media streaming service for movies and TV shows"
+    category: "Entertainment"
+    color: "#FF6B6B"
+    order: 0
+
+  - title: "Home Assistant"
+    url: "http://192.168.1.100:8123"
+    description: "Home automation and smart home hub"
+    category: "Smart Home"
+    color: "#4ECDC4"
+    order: 1
+
+  - title: "Nextcloud"
+    url: "http://192.168.1.100:8081"
+    description: "File storage, sync and collaboration platform"
+    category: "Storage"
+    color: "#45B7D1"
+    order: 2
+
+  - title: "Jellyfin"
+    url: "http://192.168.1.100:8096"
+    description: "Free media system alternative to Plex"
+    category: "Entertainment"
+    color: "#F7DC6F"
+    order: 3
+
+  - title: "Portainer"
+    url: "http://192.168.1.100:9000"
+    description: "Docker container management UI"
+    category: "Administration"
+    color: "#BB8FCE"
+    order: 4
+
+  - title: "Prometheus"
+    url: "http://192.168.1.100:9090"
+    description: "Metrics and monitoring system"
+    category: "Monitoring"
+    color: "#85C1E2"
+    order: 5
+
+  - title: "Grafana"
+    url: "http://192.168.1.100:3000"
+    description: "Visualization and analytics platform"
+    category: "Monitoring"
+    color: "#FF6B6B"
+    order: 6
+
+  - title: "Transmission"
+    url: "http://192.168.1.100:6789"
+    description: "Torrent client with web interface"
+    category: "Downloads"
+    color: "#4ECDC4"
+    order: 7
+
+  - title: "Pi-hole"
+    url: "http://192.168.1.100/admin"
+    description: "DNS sinkhole and network-wide ad blocker"
+    category: "Network"
+    color: "#45B7D1"
+    order: 8
+
+  - title: "Gitea"
+    url: "http://192.168.1.100:3001"
+    description: "Self-hosted Git service"
+    category: "Development"
+    color: "#F7DC6F"
+    order: 9
