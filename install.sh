@@ -115,6 +115,9 @@ update_system() {
 setup_repository() {
     print_header "Setting Up Repository"
     
+    # Get the current directory
+    INITIAL_DIR=$(pwd)
+    
     if [ -d "webportal" ]; then
         print_info "WebPortal directory already exists"
         read -p "Do you want to update it? (y/n) " -n 1 -r
@@ -123,6 +126,9 @@ setup_repository() {
             cd webportal
             git pull origin main
             print_success "Repository updated"
+        else
+            cd webportal
+            print_info "Using existing repository"
         fi
     else
         print_info "Cloning WebPortal repository..."
@@ -130,11 +136,22 @@ setup_repository() {
         cd webportal
         print_success "Repository cloned"
     fi
+    
+    # Export the webportal directory path for use in other functions
+    export WEBPORTAL_DIR=$(pwd)
+    print_info "Working directory: $WEBPORTAL_DIR"
 }
 
 # Create virtual environment
 setup_venv() {
     print_header "Setting Up Python Virtual Environment"
+    
+    # Ensure we're in the webportal directory
+    if [ -z "$WEBPORTAL_DIR" ]; then
+        WEBPORTAL_DIR=$(pwd)
+    fi
+    
+    cd "$WEBPORTAL_DIR"
     
     # Check if venv directory exists
     if [ -d "venv" ]; then
@@ -184,6 +201,13 @@ setup_venv() {
 install_dependencies() {
     print_header "Installing Python Dependencies"
     
+    # Ensure we're in the webportal directory
+    if [ -z "$WEBPORTAL_DIR" ]; then
+        WEBPORTAL_DIR=$(pwd)
+    fi
+    
+    cd "$WEBPORTAL_DIR"
+    
     # Ensure we're in the virtual environment
     if [ -z "$VIRTUAL_ENV" ]; then
         print_warning "Virtual environment not active, activating now..."
@@ -202,6 +226,13 @@ install_dependencies() {
 # Test installation
 test_installation() {
     print_header "Testing Installation"
+    
+    # Ensure we're in the webportal directory
+    if [ -z "$WEBPORTAL_DIR" ]; then
+        WEBPORTAL_DIR=$(pwd)
+    fi
+    
+    cd "$WEBPORTAL_DIR"
     
     # Ensure we're in the virtual environment
     if [ -z "$VIRTUAL_ENV" ]; then
@@ -230,6 +261,31 @@ setup_config() {
     fi
 }
 
+# Create activation helper script
+create_activation_script() {
+    print_header "Creating Activation Helper Script"
+    
+    # Ensure we're in the webportal directory
+    if [ -z "$WEBPORTAL_DIR" ]; then
+        WEBPORTAL_DIR=$(pwd)
+    fi
+    
+    cd "$WEBPORTAL_DIR"
+    
+    # Create a helper script that can be sourced
+    cat > activate.sh << 'HELPER_SCRIPT'
+#!/bin/bash
+# WebPortal Activation Helper Script
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+source "$SCRIPT_DIR/venv/bin/activate"
+echo "WebPortal virtual environment activated!"
+echo "You are now in: $VIRTUAL_ENV"
+HELPER_SCRIPT
+    
+    chmod +x activate.sh
+    print_success "Created activate.sh helper script"
+}
+
 # Display next steps
 show_next_steps() {
     print_header "Installation Complete!"
@@ -243,11 +299,21 @@ EOF
     echo -e "${NC}"
     
     print_info "Configuration will be stored at: $HOME/.webportal/config.yaml"
+    print_info "WebPortal installed at: $WEBPORTAL_DIR"
     
     echo ""
-    print_header "Quick Start"
+    print_header "Quick Start - Option 1 (Using Helper Script)"
+    echo "From any directory, activate with:"
+    echo "   ${BLUE}source $WEBPORTAL_DIR/activate.sh${NC}"
+    echo ""
+    echo "Then run:"
+    echo "   ${BLUE}python3 app.py${NC}"
+    echo ""
+    
+    echo ""
+    print_header "Quick Start - Option 2 (Manual Activation)"
     echo "1. Navigate to the webportal directory:"
-    echo "   ${BLUE}cd webportal${NC}"
+    echo "   ${BLUE}cd $WEBPORTAL_DIR${NC}"
     echo ""
     echo "2. Activate virtual environment:"
     echo "   ${BLUE}source venv/bin/activate${NC}"
@@ -261,7 +327,7 @@ EOF
     
     echo -e "${YELLOW}Optional: Run as a systemd service${NC}"
     echo "For persistent background operation:"
-    echo "   ${BLUE}sudo bash install-service.sh${NC}"
+    echo "   ${BLUE}cd $WEBPORTAL_DIR && sudo bash install-service.sh${NC}"
     echo ""
     
     print_success "Installation is complete. Happy labbing!"
@@ -290,6 +356,7 @@ main() {
     install_dependencies
     test_installation
     setup_config
+    create_activation_script
     show_next_steps
 }
 
